@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🔐 Login</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <a href="/">Home</a>
+    <a href="/quiz">Personality Quiz</a>
+    <a href="/register">Register</a>
+  </div>
+
+  <div class="container">
+    <h2>🔐 Login to Your Account</h2>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for cat, msg in messages %}
+            <li style="color: red; list-style:none;">{{ msg }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      <label>Email:</label><br>
+      <input type="email" name="email" required><br><br>
+
+      <label>Password:</label><br>
+      <input type="password" name="password" required><br><br>
+
+      <input type="submit" value="▶ Login">
+    </form>
+
+    <p style="margin-top: 10px;">
+      Don't have an account? <a href="/register">Register here</a>.
+    </p>
+  </div>
+
+</body>
+</html>

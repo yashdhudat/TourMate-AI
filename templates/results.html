@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🌟 Your Travel Recommendations</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+  <!-- 🔵 Navigation Bar -->
+  <div class="navbar">
+    <a href="/">Home</a>
+    <a href="/quiz">Personality Quiz</a>
+
+    {% if username %}
+      <span class="nav-user">👤 {{ username }}</span>
+      <a href="/history">History</a>
+      <a href="/logout">Logout</a>
+    {% else %}
+      <a href="/login">Login</a>
+      <a href="/register">Register</a>
+    {% endif %}
+  </div>
+
+  <div class="container">
+
+    {% if not show_more %}
+      <h2>🗺️ Top 3 Destinations for You</h2>
+    {% else %}
+      <h2>📌 More Recommendations for You</h2>
+    {% endif %}
+
+    {% for place in recommendations %}
+      <div class="result-card">
+
+        <!-- Destination Image -->
+        <img src="/static/destinations/{{ place.image_name }}"
+          onerror="this.onerror=null; this.src='/static/destinations/default.jpg';"
+          class="destination-image">
+
+
+        <h3>📍 {{ place.destination }} <small>({{ place.state }})</small></h3>
+
+        <!-- Badges -->
+        <div style="margin:8px 0;">
+          {% if place.final_score > 0.7 %}
+            <span class="badge">🌟 Top Match</span>
+          {% endif %}
+        </div>
+
+        <!-- Final Score -->
+        <p>⭐ <b>Final Match Score:</b> {{ place.final_score }}</p>
+
+        <!-- Explanation -->
+        <p><b>💬 Why this destination?</b><br>{{ place.explanation }}</p>
+
+      </div>
+    {% endfor %}
+
+    <br>
+
+    <!-- 🔁 Back to Start -->
+    {% if not show_more %}
+      <a href="/" style="text-decoration:none;">
+        <button style="margin-top:10px;">🔁 Try Again</button>
+      </a>
+    {% else %}
+      <a href="/" style="text-decoration:none;">
+        <button style="margin-top:10px;">⬅ Back to Home</button>
+      </a>
+    {% endif %}
+
+    <br><br>
+
+    <!-- ➕ SEE MORE BUTTON -->
+    {% if not show_more %}
+      <div style="text-align:center; margin-top:20px;">
+        <a href="/recommend?more=true" style="text-decoration:none;">
+          <button style="
+            background:#2a6ebc;
+            color:white;
+            padding:10px 20px;
+            border:none;
+            border-radius:8px;
+            font-size:16px;
+            cursor:pointer;">
+            ➕ See More Recommendations
+          </button>
+        </a>
+      </div>
+    {% endif %}
+
+    {% if not username %}
+      <p style="margin-top:20px; text-align:center;">
+        🔐 <a href="/login">Login</a> to save your history.
+      </p>
+    {% endif %}
+
+  </div>
+
+</body>
+</html>

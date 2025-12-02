@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🧠 Personality Quiz (OCEAN)</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <a href="/">Home</a>
+    {% if username %}
+      <span class="nav-user">👤 {{ username }}</span>
+      <a href="/history">History</a>
+      <a href="/logout">Logout</a>
+    {% else %}
+      <a href="/login">Login</a>
+      <a href="/register">Register</a>
+    {% endif %}
+  </div>
+
+  <div class="container">
+    <h2>🧠 Know Your Travel Personality</h2>
+    <p style="text-align:center; color:#444;">Rate each trait from 1 (Low) to 5 (High)</p>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+          {% for cat, msg in messages %}
+            <li style="color:red; list-style:none;">{{ msg }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+
+      <label>💡 Openness (Creativity, Curiosity)</label><br>
+      <input type="number" name="openness" min="1" max="5" value="3" required><br><br>
+
+      <label>📘 Conscientiousness (Organized, Careful)</label><br>
+      <input type="number" name="conscientiousness" min="1" max="5" value="3" required><br><br>
+
+      <label>😄 Extraversion (Outgoing, Energetic)</label><br>
+      <input type="number" name="extraversion" min="1" max="5" value="3" required><br><br>
+
+      <label>🤝 Agreeableness (Friendly, Trusting)</label><br>
+      <input type="number" name="agreeableness" min="1" max="5" value="3" required><br><br>
+
+      <label>😥 Neuroticism (Stress & Emotional Stability)</label><br>
+      <input type="number" name="neuroticism" min="1" max="5" value="3" required><br><br>
+
+      <input type="submit" value="💾 Save Personality">
+    </form>
+
+    <p style="text-align:center; margin-top:10px;">
+      Your personality helps us give better travel recommendations!
+    </p>
+
+  </div>
+
+</body>
+</html>

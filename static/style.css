@@ -1,0 +1,161 @@
+/* Full Page Background */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #f0f4ff, #e0f7fa);
+    padding: 20px;
+    color: #333;
+    margin: 0;
+}
+
+/* Centered Container */
+.container {
+    max-width: 700px;
+    margin: auto;
+    background-color: #ffffffd9;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+/* Headings */
+h1, h2, h3 {
+    text-align: center;
+    color: #2a6ebc;
+    margin-top: 0;
+}
+
+/* Form Labels */
+label {
+    font-weight: 600;
+}
+
+/* Submit Button */
+input[type="submit"],
+input[type="button"] {
+    background-color: #2a6ebc;
+    color: white;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+input[type="submit"]:hover,
+input[type="button"]:hover {
+    background-color: #1d5494;
+}
+
+/* Checkbox Grid */
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+/* Result Cards */
+.result-card {
+    background-color: #ffffff;
+    margin-bottom: 15px;
+    padding: 20px;
+    border-left: 5px solid #2a6ebc;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* -------------------------------------- */
+/* 🚀 NEW: Navigation Bar */
+/* -------------------------------------- */
+
+.navbar {
+    background: #2a6ebc;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.navbar a {
+    color: #f1f1f1;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+.navbar a:hover {
+    background: #1d5494;
+}
+
+.nav-user {
+    margin-left: auto;
+    color: #ffeb3b;
+    font-weight: bold;
+    padding-right: 10px;
+}
+
+/* Make links look nice inside body */
+a {
+    color: #1d5494;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* History cards (optional future use) */
+.history-card {
+    background: #ffffff;
+    padding: 15px;
+    margin-bottom: 15px;
+    position: relative;
+    border-left: 5px solid #1d5494;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+.badge {
+  display: inline-block;
+  background: #2a6ebc;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 8px;
+  margin-right: 6px;
+  font-size: 12px;
+  font-weight: bold;
+}
+.destination-image {
+  width: 70%;              /* Make image smaller */
+  max-width: 300px;        /* Limit size on big screens */
+  height: auto;            /* Keep aspect ratio */
+  display: block;          /* Centering support */
+  margin: 0 auto 15px;     /* Center + spacing */
+  border-radius: 12px;     /* Rounded corners */
+  object-fit: cover;       /* Clean crop if needed */
+}
+.delete-form {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.delete-btn {
+  background: #ff4f4f;
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  transition: background .2s ease;
+}
+
+.delete-btn:hover {
+  background: #d93d3d;
+}

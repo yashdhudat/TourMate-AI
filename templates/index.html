@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🌍 Travel Buddy – Get Destination Suggestions</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+  <!-- 🔵 Navigation Bar -->
+  <div class="navbar">
+    <a href="/">Home</a>
+    <a href="/quiz">Personality Quiz</a>
+
+    {% if username %}
+      <span class="nav-user">👤 {{ username }}</span>
+      <a href="/history">History</a>
+      <a href="/logout">Logout</a>
+    {% else %}
+      <a href="/login">Login</a>
+      <a href="/register">Register</a>
+    {% endif %}
+  </div>
+
+  <div class="container">
+    <h1>✈️ Plan Your Next Adventure</h1>
+
+    <form action="/recommend" method="POST">
+
+      <!-- Climate -->
+      <label>🌡️ Preferred Climate:</label><br>
+      <input type="radio" name="climate" value="Warm" required> Warm
+      <input type="radio" name="climate" value="Cold"> Cold
+      <input type="radio" name="climate" value="Moderate"> Moderate
+      <br><br>
+
+      <!-- Budget -->
+      <label>💰 Budget:</label><br>
+      <input type="radio" name="budget" value="Low" required> Low
+      <input type="radio" name="budget" value="Medium"> Medium
+      <input type="radio" name="budget" value="High"> High
+      <br><br>
+
+      <!-- Travel Type -->
+      <label>🧍‍♂️ Travel Type:</label><br>
+      <input type="checkbox" name="travel_type" value="Solo"> Solo
+      <input type="checkbox" name="travel_type" value="Couple"> Couple
+      <input type="checkbox" name="travel_type" value="Family"> Family
+      <input type="checkbox" name="travel_type" value="Group"> Group
+      <br><br>
+
+      <!-- Activities -->
+      <label>🎯 Interests / Activities:</label>
+      <div class="checkbox-grid">
+        {% for activity in ['Beaches','Culture','Food','History','Nature','Nightlife','Photography','Relaxation','Safari','Shopping','Sightseeing','Spiritual','Trekking','Adventure'] %}
+          <label><input type="checkbox" name="activities" value="{{ activity }}"> {{ activity }}</label>
+        {% endfor %}
+      </div>
+      <br>
+
+      <input type="submit" value="🔍 Find Destinations">
+
+      {% if not username %}
+        <p style="margin-top:10px; color: #444;">
+          🔐 <a href="/login">Login</a> to save your personality and history.
+        </p>
+      {% endif %}
+
+    </form>
+  </div>
+
+</body>
+</html>
