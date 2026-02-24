@@ -1,183 +1,228 @@
-# 🌍 TourMate AI  
-### AI-Powered Tourist Destination Recommendation System
+# 🌍 PersonaTrip AI — Personality-Based Travel Recommender
 
-TourMate AI is an intelligent travel recommendation system that suggests personalized tourist destinations based on a user’s **personality traits (OCEAN model)**, **budget**, **group type**, and **preferences**.  
-The system enhances user satisfaction with **sentiment-based learning**, allowing destination rankings to improve over time.
+> An AI-powered travel recommendation system that matches destinations to your unique personality using the **OCEAN / Big Five psychological model** and **machine learning**.
 
----
-
-## 🚀 Features
-
-### 🔹 **1. Personality-Based Recommendations**
-Uses the OCEAN model (Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism) collected via a custom quiz to personalize travel suggestions.
-
-### 🔹 **2. Preference Matching**
-Considers:
-- Budget range  
-- Group type (Solo, Friends, Family, Couple)  
-- Trip style preferences  
-
-### 🔹 **3. Machine Learning Recommender Engine**
-Uses **Cosine Similarity / KMeans Clustering** to match users with the most suitable destinations from the dataset.
-
-### 🔹 **4. Sentiment Analysis Module**
-After a trip, users can submit a review which is analyzed with **TextBlob** to:
-- Understand user satisfaction  
-- Improve future recommendations  
-
-### 🔹 **5. Clean and Interactive UI**
-Built using **HTML, CSS, and JavaScript** for a smooth experience.
-
-### 🔹 **6. Flask Backend API**
-Handles:
-- Quiz submission  
-- Preference storage  
-- Recommendation fetching  
-- Review sentiment analysis  
+![Python](https://img.shields.io/badge/Python-3.10+-blue?style=flat-square&logo=python)
+![Flask](https://img.shields.io/badge/Flask-3.1.2-black?style=flat-square&logo=flask)
+![Groq](https://img.shields.io/badge/Groq-LLaMA_3.3-orange?style=flat-square)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-1.6.1-F7931E?style=flat-square&logo=scikit-learn)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 ---
 
-## 🧠 Tech Stack
+## 📌 What is PersonaTrip AI?
 
-### **Frontend**
-- HTML  
-- CSS  
-- JavaScript  
+Most travel apps recommend destinations based on **what everyone else likes**. PersonaTrip AI is different — it recommends destinations based on **who you are**.
 
-### **Backend**
-- Python  
-- Flask  
+Using the scientifically validated **OCEAN personality model** (Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism), the system builds a unique personality vector for each user and matches it against a curated destination dataset using **cosine similarity**.
 
-### **Machine Learning / NLP**
-- Scikit-learn  
-- Pandas  
-- NumPy  
-- TextBlob  
-
-### **Database**
-- SQLite (persona_trip.db)
+The result? Travel recommendations that feel personally crafted — not generic.
 
 ---
 
-## 📊 Project Architecture
+## ✨ Key Features
 
+### 🧠 OCEAN Personality Auto-Detector
+- 10 real psychometric questions (not manual sliders)
+- Auto-calculates all 5 OCEAN trait scores
+- Live progress bar as you answer
+- Scores saved to your profile for future use
 
+### 🤖 AI-Powered Recommendation Engine
+- Cosine similarity matching across 29-dimensional feature vectors
+- Combines personality traits + travel preferences (climate, budget, activities)
+- Returns Top 3 personalised destinations with match percentage
 
-TourMate-AI/
-│── app.py
-│── templates/
-│ ├── index.html
-│ ├── quiz.html
-│ ├── preferences.html
-│ ├── results.html
-│ ├── review.html
-│── static/
-│ ├── css/
-│ ├── js/
-│── models/
-│ ├── recommender.py
-│ ├── sentiment.py
-│── data/
-│ ├── destinations.csv
-│── database/
-│ ├── tourmate.db
-│── README.md
+### 💬 Destination AI Chatbot (Groq LLaMA)
+- Ask anything about a recommended destination
+- Personality-aware responses tailored to your travel style
+- Quick-question buttons for instant insights
+- Powered by Groq's ultra-fast LLaMA 3.3 inference
 
+### 🗓️ AI Trip Itinerary Generator
+- Day-by-day personalised travel plan
+- Morning / Afternoon / Evening activity breakdown
+- Insider tips based on your personality and budget
+- Switchable between 2, 3, and 5-day views
+
+### 📜 Recommendation History
+- All past recommendations saved per user
+- Grouped by date with accordion view
+- Delete individual entries
+
+### 🔐 Secure Authentication
+- User registration & login
+- Password hashing with Werkzeug
+- Session-based auth with SQLite storage
 
 ---
 
-## 📥 Installation & Setup
+## 🏗️ Tech Stack
 
-### **1️⃣ Clone the Repository**
+| Layer | Technology |
+|-------|-----------|
+| Backend | Python, Flask |
+| AI / ML | scikit-learn (Cosine Similarity) |
+| LLM | Groq API — LLaMA 3.3 70B |
+| Database | SQLite |
+| Frontend | HTML5, CSS3, Jinja2 |
+| Data | Pandas, NumPy |
+
+---
+
+## 📁 Project Structure
+
+```
+tourism_recommender/
+│
+├── app.py                  # Flask routes & session handling
+├── recommend.py            # ML recommendation engine
+├── ai_utils.py             # Groq AI — chatbot, itinerary, explanations
+├── preprocess.py           # Data preprocessing pipeline
+├── db_schema.sql           # SQLite database schema
+├── requirements.txt        # Python dependencies
+│
+├── data/
+│   └── destination_vectors.csv   # Preprocessed destination feature vectors
+│
+├── database/
+│   └── persona_trip.db           # SQLite database (auto-created)
+│
+├── static/
+│   ├── style.css                 # Premium dark UI design system
+│   └── destinations/             # Destination images
+│
+└── templates/
+    ├── index.html                # Home — travel preferences form
+    ├── quiz.html                 # OCEAN personality quiz
+    ├── results.html              # Recommendations + chatbot + itinerary
+    ├── itinerary.html            # AI day-by-day trip planner
+    ├── history.html              # User recommendation history
+    ├── login.html                # Login page
+    └── register.html             # Registration page
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Python 3.10+
+- A free [Groq API key](https://console.groq.com)
+
+### Installation
+
+**1. Clone the repository:**
 ```bash
 git clone https://github.com/yashdhudat/TourMate-AI.git
 cd TourMate-AI
+```
 
-2️⃣ Create Virtual Environment
+**2. Create and activate a virtual environment:**
+```bash
+# Windows
 python -m venv venv
-source venv/bin/activate      # Mac/Linux
-venv\Scripts\activate         # Windows
+venv\Scripts\activate
 
-3️⃣ Install Dependencies
+# Mac / Linux
+python -m venv venv
+source venv/bin/activate
+```
+
+**3. Install dependencies:**
+```bash
 pip install -r requirements.txt
+```
 
-4️⃣ Run the Flask App
+**4. Set your Groq API key:**
+
+Create a `.env` file in the project root:
+```
+GROQ_API_KEY=gsk_your_api_key_here
+```
+
+Or set it as an environment variable:
+```bash
+# Windows
+set GROQ_API_KEY=gsk_your_api_key_here
+
+# Mac / Linux
+export GROQ_API_KEY=gsk_your_api_key_here
+```
+
+Get a free key at [console.groq.com](https://console.groq.com) — no credit card required.
+
+**5. Run the application:**
+```bash
 python app.py
+```
 
-
-Open the browser:
-👉 http://127.0.0.1:5000
-
-📡 API Endpoints (Overview)
-Endpoint	Method	Description
-/quiz	POST	Submits personality test results
-/preferences	POST	Saves budget and group type
-/recommend	GET	Returns top recommended destinations
-/review	POST	Saves review + performs sentiment analysis
-📂 Dataset
-
-destinations.csv contains fields like:
-
-Destination Name
-
-State / Region
-
-Category (Beach, Hill Station, Adventure, Culture, Wildlife, etc.)
-
-Cost Level
-
-Ideal Group Type
-
-Best Season
-
-Personality Match Scores
-
-🧪 Machine Learning Logic
-✔ Personality Matching
-
-Uses cosine similarity to compare user personality scores with destination profiles.
-
-✔ Preference Filtering
-
-Destinations are given weighted scores based on:
-
-Budget
-
-Group type
-
-Category rating
-
-✔ Sentiment Learning
-
-User reviews update average sentiment for each destination, improving ranking.
-
-🛠 Future Enhancements
-
-Add Deep Learning–based sentiment classifier
-
-Support multi-language recommendations
-
-Add a user dashboard with analytics
-
-Integrate live weather & travel cost APIs
-
-Deploy using Render / Vercel / AWS
-
-🤝 Contributing
-
-Contributions are welcome!
-Feel free to open issues or submit PRs.
-
-📄 License
-
-This project is licensed under the MIT License.
-
-⭐ Support
-
-If you like this project, consider giving it a star ⭐ on GitHub!
+**6. Open in browser:**
+```
+http://127.0.0.1:5000
+```
 
 ---
 
-If you want, I can also generate a **requirements.txt**, a **project logo**, or a **demo GIF** placeholder.
+## 🔄 How It Works
 
-Want me to generate anything else?
+```
+User Registers / Logs In
+        ↓
+Completes 10-Question OCEAN Quiz
+        ↓
+OCEAN Scores Auto-Calculated (0.0 – 1.0 scale)
+        ↓
+User Sets Travel Preferences (Climate, Budget, Activities)
+        ↓
+29-Dimensional Feature Vector Built
+        ↓
+Cosine Similarity vs Destination Matrix
+        ↓
+Top 3 Destinations Returned
+        ↓
+Groq AI Generates Personalised Explanation
+        ↓
+User Can: Ask Chatbot | Generate Itinerary | View History
+```
+
+---
+
+## 🧪 The OCEAN Model
+
+| Trait | What it measures | Travel implication |
+|-------|-----------------|-------------------|
+| **O**penness | Creativity, curiosity | Prefers unique, cultural destinations |
+| **C**onscientiousness | Organisation, planning | Prefers structured itineraries |
+| **E**xtraversion | Sociability, energy | Prefers lively, social destinations |
+| **A**greeableness | Cooperation, trust | Prefers group-friendly destinations |
+| **N**euroticism | Stress sensitivity | Prefers safe, comfortable destinations |
+
+---
+
+## 🔮 Future Scope
+
+- [ ] Live budget estimation (flights + hotel + food)
+- [ ] Hotel & activity recommendations
+- [ ] Feedback-based adaptive ML (ratings improve future results)
+- [ ] Google Maps integration
+- [ ] Group compatibility analysis
+- [ ] Eco-friendly destination tagging
+- [ ] Mobile app (React Native)
+
+---
+
+## 👨‍💻 Author
+
+**Yash Dhudat**
+- GitHub: [@yashdhudat](https://github.com/yashdhudat)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+> *"Travel is the only thing you buy that makes you richer — PersonaTrip makes sure you buy the right one."*
