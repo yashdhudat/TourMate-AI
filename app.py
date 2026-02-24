@@ -1,15 +1,13 @@
-# app.py (final)
+# app.py
 import os
 import json
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from flask import Flask, render_template, request, redirect, url_for, session, g, flash
+from flask import Flask, render_template, request, redirect, url_for, session, g, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from recommend import get_recommendations
-from datetime import datetime
 import pytz
-
 
 # --- Paths ---
 BASE_DIR = Path(__file__).resolve().parent
@@ -20,7 +18,6 @@ SCHEMA_PATH = BASE_DIR / "db_schema.sql"
 
 # --- Flask app ---
 app = Flask(__name__)
-# Use env var if provided; otherwise a default (replace with strong secret in production)
 app.secret_key = os.getenv("FLASK_SECRET", "change_this_secret_for_production")
 
 # --- Database helpers ---
@@ -46,17 +43,20 @@ def init_db():
     db.commit()
     db.close()
 
-# Initialize DB if missing
 if not DB_PATH.exists():
     init_db()
     print("Initialized DB at", DB_PATH)
 
-# --- Routes: Authentication ---
+
+# ═══════════════════════════════════════
+#  AUTH ROUTES
+# ═══════════════════════════════════════
+
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
-        email = request.form.get("email", "").strip().lower()
+        email    = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
 
         if not username or not email or not password:
@@ -64,111 +64,120 @@ def register():
             return render_template("register.html")
 
         db = get_db()
-        cur = db.execute("SELECT id FROM users WHERE email = ?", (email,))
-        if cur.fetchone():
+        if db.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone():
             flash("Email already registered. Try logging in.", "danger")
             return render_template("register.html")
 
-        pw_hash = generate_password_hash(password)
         db.execute(
             "INSERT INTO users (username, email, password_hash, created_at) VALUES (?, ?, ?, ?)",
-            (username, email, pw_hash, datetime.utcnow().isoformat()),
+            (username, email, generate_password_hash(password), datetime.utcnow().isoformat()),
         )
         db.commit()
         flash("Account created. Please log in.", "success")
         return redirect(url_for("login"))
     return render_template("register.html")
 
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
+        email    = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
         db = get_db()
-        cur = db.execute("SELECT id, username, password_hash FROM users WHERE email = ?", (email,))
-        row = cur.fetchone()
+        row = db.execute(
+            "SELECT id, username, password_hash FROM users WHERE email = ?", (email,)
+        ).fetchone()
+
         if row and check_password_hash(row["password_hash"], password):
             session.clear()
-            session["user_id"] = row["id"]
+            session["user_id"]  = row["id"]
             session["username"] = row["username"]
-            db.execute("UPDATE users SET last_login = ? WHERE id = ?", (datetime.utcnow().isoformat(), row["id"]))
+            db.execute("UPDATE users SET last_login = ? WHERE id = ?",
+                       (datetime.utcnow().isoformat(), row["id"]))
             db.commit()
-
-            # ✅ Redirect to Personality Quiz FIRST
             flash("Login successful, please complete your personality quiz.", "success")
             return redirect(url_for("quiz"))
 
         flash("Invalid credentials", "danger")
-    return render_template("login.html")
+    return render_template("login.html", username=session.get("username"))
+
 
 @app.route("/logout")
 def logout():
     session.clear()
     flash("Logged out", "info")
-    return redirect(url_for("index"))
+    return redirect(url_for("login"))
 
-# --- Home & quiz routes ---
+
+# ═══════════════════════════════════════
+#  HOME
+# ═══════════════════════════════════════
+
 @app.route("/")
 def index():
     if not session.get("user_id"):
-        return redirect(url_for("login"))  # Force login before accessing home
+        return redirect(url_for("login"))
     return render_template("index.html", username=session.get("username"))
 
+
+# ═══════════════════════════════════════
+#  QUIZ  — now uses 10 questions → auto OCEAN scores
+# ═══════════════════════════════════════
 
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
     if request.method == "POST":
-        # Read 1-5 scale numeric fields
         try:
-            o = float(request.form.get("openness", 3))
-            c = float(request.form.get("conscientiousness", 3))
-            e = float(request.form.get("extraversion", 3))
-            a = float(request.form.get("agreeableness", 3))
-            n = float(request.form.get("neuroticism", 3))
+            # Read all 10 answers (1-5 scale)
+            q = {i: float(request.form.get(f"q{i}", 3)) for i in range(1, 11)}
         except ValueError:
-            flash("Invalid input for quiz.", "danger")
+            flash("Invalid input. Please answer all questions.", "danger")
             return render_template("quiz.html", username=session.get("username"))
 
-        # normalize 1-5 -> 0.0-1.0
-        def normalize(x):
-            return max(0.0, min(1.0, (x - 1.0) / 4.0))
+        # ── Map questions to OCEAN traits ──
+        # Q1, Q2  → Openness
+        # Q3, Q4  → Conscientiousness
+        # Q5, Q6  → Extraversion
+        # Q7, Q8  → Agreeableness
+        # Q9, Q10 → Neuroticism
+        def avg_normalize(*vals):
+            avg = sum(vals) / len(vals)
+            return round(max(0.0, min(1.0, (avg - 1.0) / 4.0)), 4)
 
         pers_vec = {
-            "openness": normalize(o),
-            "conscientiousness": normalize(c),
-            "extraversion": normalize(e),
-            "agreeableness": normalize(a),
-            "neuroticism": normalize(n),
+            "openness":          avg_normalize(q[1], q[2]),
+            "conscientiousness": avg_normalize(q[3], q[4]),
+            "extraversion":      avg_normalize(q[5], q[6]),
+            "agreeableness":     avg_normalize(q[7], q[8]),
+            "neuroticism":       avg_normalize(q[9], q[10]),
         }
 
         # Save to DB if logged in
         if session.get("user_id"):
             db = get_db()
-            # upsert into personality (user_id is primary key)
             db.execute(
                 """
-                INSERT INTO personality (user_id, openness, conscientiousness, extraversion, agreeableness, neuroticism, updated_at)
+                INSERT INTO personality
+                  (user_id, openness, conscientiousness, extraversion, agreeableness, neuroticism, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(user_id) DO UPDATE SET
-                    openness=excluded.openness,
-                    conscientiousness=excluded.conscientiousness,
-                    extraversion=excluded.extraversion,
-                    agreeableness=excluded.agreeableness,
-                    neuroticism=excluded.neuroticism,
-                    updated_at=excluded.updated_at
+                  openness=excluded.openness,
+                  conscientiousness=excluded.conscientiousness,
+                  extraversion=excluded.extraversion,
+                  agreeableness=excluded.agreeableness,
+                  neuroticism=excluded.neuroticism,
+                  updated_at=excluded.updated_at
                 """,
                 (
                     session["user_id"],
-                    pers_vec["openness"],
-                    pers_vec["conscientiousness"],
-                    pers_vec["extraversion"],
-                    pers_vec["agreeableness"],
+                    pers_vec["openness"], pers_vec["conscientiousness"],
+                    pers_vec["extraversion"], pers_vec["agreeableness"],
                     pers_vec["neuroticism"],
                     datetime.utcnow().isoformat(),
                 ),
             )
             db.commit()
-            flash("Personality saved to your profile.", "success")
+            flash("Personality profile saved! 🧠", "success")
         else:
             flash("Personality recorded for this session. Login to save permanently.", "info")
 
@@ -177,152 +186,215 @@ def quiz():
 
     return render_template("quiz.html", username=session.get("username"))
 
-# --- Recommendation route ---
+
+# ═══════════════════════════════════════
+#  RECOMMENDATIONS
+# ═══════════════════════════════════════
+
 @app.route("/recommend", methods=["GET", "POST"])
 def recommend():
-    # Check if user clicked "See More"
     show_more = request.args.get("more") == "true"
 
-    # If POST → user submitted new preferences
     if request.method == "POST":
-        # --- Build user_input dictionary ---
         user_input = {
             "Climate_Moderate": int(request.form.get("climate") == "Moderate"),
-            "Climate_Cold": int(request.form.get("climate") == "Cold"),
-            "Climate_Warm": int(request.form.get("climate") == "Warm"),
-            "Budget_Low": int(request.form.get("budget") == "Low"),
-            "Budget_Medium": int(request.form.get("budget") == "Medium"),
-            "Budget_High": int(request.form.get("budget") == "High"),
-            "Solo": int("Solo" in request.form.getlist("travel_type")),
+            "Climate_Cold":     int(request.form.get("climate") == "Cold"),
+            "Climate_Warm":     int(request.form.get("climate") == "Warm"),
+            "Budget_Low":       int(request.form.get("budget") == "Low"),
+            "Budget_Medium":    int(request.form.get("budget") == "Medium"),
+            "Budget_High":      int(request.form.get("budget") == "High"),
+            "Solo":   int("Solo"   in request.form.getlist("travel_type")),
             "Couple": int("Couple" in request.form.getlist("travel_type")),
             "Family": int("Family" in request.form.getlist("travel_type")),
-            "Group": int("Group" in request.form.getlist("travel_type")),
+            "Group":  int("Group"  in request.form.getlist("travel_type")),
         }
-
-        # Activities
-        activities = [
-            "Beaches", "Culture", "Food", "History", "Nature", "Nightlife",
-            "Photography", "Relaxation", "Safari", "Shopping", "Sightseeing",
-            "Spiritual", "Trekking", "Adventure"
-        ]
+        activities = ["Beaches","Culture","Food","History","Nature","Nightlife",
+                      "Photography","Relaxation","Safari","Shopping","Sightseeing",
+                      "Spiritual","Trekking","Adventure"]
         selected = request.form.getlist("activities")
-        for activity in activities:
-            user_input[activity] = int(activity in selected)
+        for act in activities:
+            user_input[act] = int(act in selected)
 
-        # Save user_input in session so pagination still works
         session["last_user_input"] = user_input
-
     else:
-        # GET request → for "See More Suggestions"
         user_input = session.get("last_user_input")
-
         if not user_input:
             flash("Please fill the form first.", "warning")
             return redirect("/")
 
-    # ---- Get personality (DB or session) ----
+    # Load personality
     personality_data = None
     if session.get("user_id"):
         db = get_db()
         row = db.execute(
-            "SELECT openness, conscientiousness, extraversion, agreeableness, neuroticism FROM personality WHERE user_id = ?",
-            (session["user_id"],)
+            "SELECT openness, conscientiousness, extraversion, agreeableness, neuroticism "
+            "FROM personality WHERE user_id = ?", (session["user_id"],)
         ).fetchone()
         if row:
-            personality_data = {
-                "openness": row["openness"],
-                "conscientiousness": row["conscientiousness"],
-                "extraversion": row["extraversion"],
-                "agreeableness": row["agreeableness"],
-                "neuroticism": row["neuroticism"],
-            }
+            personality_data = dict(row)
 
     if not personality_data:
         personality_data = session.get("personality")
 
-    # ---- Call new recommendation function ----
     recommendations = get_recommendations(
         user_input=user_input,
         user_personality=personality_data,
-        show_more=show_more
+        show_more=show_more,
+        use_ai=True
     )
 
-    # ---- Save history only when POST (first page) ----
+    # Save history on first POST
     if request.method == "POST" and session.get("user_id"):
         db = get_db()
         ts = datetime.utcnow().isoformat()
         for rec in recommendations:
             db.execute(
-                "INSERT INTO history (user_id, destination, country, score, params_json, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                (
-                    session["user_id"],
-                    rec["destination"],
-                    rec["state"],   # <– rec["state"] still correct, but stored under 'country'
-                    rec["final_score"],
-                    json.dumps(user_input),
-                    ts,
-                )
+                "INSERT INTO history (user_id, destination, country, score, params_json, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (session["user_id"], rec["destination"], rec["state"],
+                 rec["final_score"], json.dumps(user_input), ts),
             )
         db.commit()
 
-    return render_template(
-        "results.html",
-        recommendations=recommendations,
-        show_more=show_more,
-        username=session.get("username")
-    )
+    return render_template("results.html",
+                           recommendations=recommendations,
+                           show_more=show_more,
+                           username=session.get("username"))
 
-# --- History view ---
+
+# ═══════════════════════════════════════
+#  AI ITINERARY  — NEW
+#  GET /itinerary/<destination>?state=<state>
+# ═══════════════════════════════════════
+
+@app.route("/itinerary/<destination>")
+def itinerary(destination):
+    if not session.get("user_id"):
+        flash("Please log in to generate an itinerary.", "info")
+        return redirect(url_for("login"))
+
+    state = request.args.get("state", "")
+    days  = int(request.args.get("days", 3))
+
+    # Load personality & last preferences
+    personality_data = None
+    db = get_db()
+    row = db.execute(
+        "SELECT openness, conscientiousness, extraversion, agreeableness, neuroticism "
+        "FROM personality WHERE user_id = ?", (session["user_id"],)
+    ).fetchone()
+    if row:
+        personality_data = dict(row)
+
+    user_input = session.get("last_user_input", {})
+
+    try:
+        from ai_utils import generate_itinerary
+        itinerary_data = generate_itinerary(
+            destination=destination,
+            state=state,
+            personality=personality_data,
+            user_input=user_input,
+            days=days
+        )
+    except Exception as e:
+        print(f"[itinerary error] {e}")
+        itinerary_data = None
+
+    return render_template("itinerary.html",
+                           itinerary=itinerary_data,
+                           destination=destination,
+                           state=state,
+                           username=session.get("username"))
+
+
+# ═══════════════════════════════════════
+#  DESTINATION CHATBOT  — NEW
+#  POST /chat  (JSON API)
+# ═══════════════════════════════════════
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    data        = request.get_json()
+    destination = data.get("destination", "")
+    state       = data.get("state", "")
+    question    = data.get("question", "").strip()
+
+    if not question or not destination:
+        return jsonify({"answer": "Please provide a destination and a question."})
+
+    # Load personality for personalised answers
+    personality_data = None
+    if session.get("user_id"):
+        db = get_db()
+        row = db.execute(
+            "SELECT openness, conscientiousness, extraversion, agreeableness, neuroticism "
+            "FROM personality WHERE user_id = ?", (session["user_id"],)
+        ).fetchone()
+        if row:
+            personality_data = dict(row)
+
+    try:
+        from ai_utils import destination_chat
+        answer = destination_chat(
+            destination=destination,
+            state=state,
+            question=question,
+            personality=personality_data
+        )
+    except Exception as e:
+        print(f"[chat error] {e}")
+        answer = "I'm having trouble connecting right now. Please try again!"
+
+    return jsonify({"answer": answer})
+
+
+# ═══════════════════════════════════════
+#  HISTORY
+# ═══════════════════════════════════════
+
 @app.route("/history")
 def history():
     if not session.get("user_id"):
         flash("Please log in to view history.", "info")
         return redirect(url_for("login"))
 
-    db = get_db()
+    db   = get_db()
     rows = db.execute(
-    "SELECT id, destination, country, score, params_json, created_at FROM history WHERE user_id = ? ORDER BY created_at DESC",
-    (session["user_id"],)
+        "SELECT id, destination, country, score, params_json, created_at "
+        "FROM history WHERE user_id = ? ORDER BY created_at DESC",
+        (session["user_id"],)
     ).fetchall()
-    history = [dict(r) for r in rows]
-    return render_template("history.html", history=history, username=session.get("username"))
+    return render_template("history.html",
+                           history=[dict(r) for r in rows],
+                           username=session.get("username"))
+
 
 @app.route("/history/delete/<int:history_id>", methods=["POST"])
 def delete_history(history_id):
     if not session.get("user_id"):
         return redirect(url_for("login"))
-
-    db = get_db()
-    db.execute(
-        "DELETE FROM history WHERE id = ? AND user_id = ?", 
-        (history_id, session["user_id"])
-    )
-    db.commit()
-
-    flash("Entry deleted successfully.", "success")
+    get_db().execute("DELETE FROM history WHERE id = ? AND user_id = ?",
+                     (history_id, session["user_id"]))
+    get_db().commit()
+    flash("Entry deleted.", "success")
     return redirect(url_for("history"))
 
+
+# ═══════════════════════════════════════
+#  TEMPLATE FILTER
+# ═══════════════════════════════════════
 
 @app.template_filter("pretty_ist")
 def pretty_ist(value):
     try:
-        # parse stored UTC ISO timestamp
         dt_utc = datetime.fromisoformat(value)
-
-        # convert UTC → IST
-        utc_zone = pytz.timezone("UTC")
-        ist_zone = pytz.timezone("Asia/Kolkata")
-
-        dt_utc = utc_zone.localize(dt_utc)
-        dt_ist = dt_utc.astimezone(ist_zone)
-
-        # pretty format
+        ist    = pytz.timezone("Asia/Kolkata")
+        dt_ist = pytz.utc.localize(dt_utc).astimezone(ist)
         return dt_ist.strftime("🕒 %d %b %Y • %I:%M %p")
-    except Exception as e:
+    except Exception:
         return value
 
 
-
-# Run app
 if __name__ == "__main__":
     app.run(debug=True)

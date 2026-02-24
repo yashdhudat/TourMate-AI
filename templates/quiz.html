@@ -2,16 +2,156 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>🧠 Personality Quiz (OCEAN)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PersonaTrip — Know Your Travel Personality</title>
   <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .question-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      margin-bottom: 14px;
+      transition: var(--transition);
+      animation: fadeSlideUp 0.4s ease both;
+    }
+    .question-card:hover {
+      background: rgba(255,255,255,0.055);
+      border-color: rgba(201,168,76,0.2);
+    }
+    .question-text {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .question-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .likert-group {
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+    }
+    .likert-option input[type="radio"] { display: none; }
+    .likert-option label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 14px;
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: none;
+      letter-spacing: 0;
+      transition: var(--transition);
+      background: rgba(255,255,255,0.02);
+      min-width: 56px;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .likert-option label .num {
+      font-family: 'DM Mono', monospace;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .likert-option input[type="radio"]:checked + label {
+      background: var(--gold-dim);
+      border-color: var(--gold);
+      color: var(--gold-light);
+    }
+    .likert-option input[type="radio"]:checked + label .num {
+      color: var(--gold);
+    }
+    .likert-option label:hover {
+      border-color: rgba(201,168,76,0.4);
+      color: var(--text-primary);
+    }
+    .likert-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 6px;
+      padding: 0 2px;
+    }
+    .likert-labels span {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+    .trait-section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 28px 0 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .trait-section-header .icon {
+      width: 34px; height: 34px;
+      background: var(--gold-dim);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .trait-section-header .info { flex: 1; }
+    .trait-section-header .trait-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .trait-section-header .trait-hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .progress-wrap {
+      margin-bottom: 28px;
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .progress-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light));
+      border-radius: 99px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+  </style>
 </head>
 
 <body>
+<div class="page-wrapper">
 
-  <!-- Navbar -->
-  <div class="navbar">
+  <nav class="navbar">
+    <a class="navbar-brand" href="/">Persona<span>Trip</span></a>
     <a href="/">Home</a>
     {% if username %}
+      <a href="/quiz" style="color:var(--gold);">Personality Quiz</a>
       <span class="nav-user">👤 {{ username }}</span>
       <a href="/history">History</a>
       <a href="/logout">Logout</a>
@@ -19,48 +159,258 @@
       <a href="/login">Login</a>
       <a href="/register">Register</a>
     {% endif %}
-  </div>
+  </nav>
 
-  <div class="container">
-    <h2>🧠 Know Your Travel Personality</h2>
-    <p style="text-align:center; color:#444;">Rate each trait from 1 (Low) to 5 (High)</p>
+  <main class="main-content">
+    <div class="container" style="max-width: 680px;">
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <ul>
+      <div class="auth-logo">
+        <div class="auth-logo-mark">🧠</div>
+        <h2 style="margin-top: 0;">Know Your Travel Personality</h2>
+        <p class="subtitle" style="margin-bottom: 0;">
+          Answer 10 honest questions — we'll calculate your OCEAN profile automatically
+        </p>
+      </div>
+
+      <div class="auth-divider"></div>
+
+      <!-- Progress Bar -->
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span>Your Progress</span>
+          <span id="progress-text">0 / 10 answered</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
           {% for cat, msg in messages %}
-            <li style="color:red; list-style:none;">{{ msg }}</li>
+            <li class="flash-message {% if cat == 'error' %}error{% endif %}" style="margin-bottom:20px;">{{ msg }}</li>
           {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
+        {% endif %}
+      {% endwith %}
 
-    <form method="POST">
+      <form method="POST" id="quizForm">
 
-      <label>💡 Openness (Creativity, Curiosity)</label><br>
-      <input type="number" name="openness" min="1" max="5" value="3" required><br><br>
+        <!-- ── OPENNESS ── -->
+        <div class="trait-section-header">
+          <div class="icon">💡</div>
+          <div class="info">
+            <div class="trait-title">Openness</div>
+            <div class="trait-hint">Creativity, curiosity, love of new experiences</div>
+          </div>
+        </div>
 
-      <label>📘 Conscientiousness (Organized, Careful)</label><br>
-      <input type="number" name="conscientiousness" min="1" max="5" value="3" required><br><br>
+        <div class="question-card" style="animation-delay:0.05s">
+          <span class="question-num">Question 1 of 10</span>
+          <div class="question-text">I enjoy trying new activities, foods, or visiting places I've never been before.</div>
+          <div class="likert-group">
+            {% for val, lbl in [(1,'Strongly\nDisagree'),(2,'Disagree'),(3,'Neutral'),(4,'Agree'),(5,'Strongly\nAgree')] %}
+            <div class="likert-option">
+              <input type="radio" name="q1" id="q1_{{val}}" value="{{val}}" required>
+              <label for="q1_{{val}}"><span class="num">{{val}}</span>{{lbl}}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
 
-      <label>😄 Extraversion (Outgoing, Energetic)</label><br>
-      <input type="number" name="extraversion" min="1" max="5" value="3" required><br><br>
+        <div class="question-card" style="animation-delay:0.1s">
+          <span class="question-num">Question 2 of 10</span>
+          <div class="question-text">I love exploring art, culture, and learning about different traditions and ways of life.</div>
+          <div class="likert-group">
+            {% for val, lbl in [(1,'Strongly\nDisagree'),(2,'Disagree'),(3,'Neutral'),(4,'Agree'),(5,'Strongly\nAgree')] %}
+            <div class="likert-option">
+              <input type="radio" name="q2" id="q2_{{val}}" value="{{val}}" required>
+              <label for="q2_{{val}}"><span class="num">{{val}}</span>{{lbl}}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
 
-      <label>🤝 Agreeableness (Friendly, Trusting)</label><br>
-      <input type="number" name="agreeableness" min="1" max="5" value="3" required><br><br>
+        <!-- ── CONSCIENTIOUSNESS ── -->
+        <div class="trait-section-header">
+          <div class="icon">📘</div>
+          <div class="info">
+            <div class="trait-title">Conscientiousness</div>
+            <div class="trait-hint">Organization, planning, attention to detail</div>
+          </div>
+        </div>
 
-      <label>😥 Neuroticism (Stress & Emotional Stability)</label><br>
-      <input type="number" name="neuroticism" min="1" max="5" value="3" required><br><br>
+        <div class="question-card" style="animation-delay:0.15s">
+          <span class="question-num">Question 3 of 10</span>
+          <div class="question-text">When I travel, I prefer to plan everything in advance — itinerary, hotels, and transport.</div>
+          <div class="likert-group">
+            {% for val, lbl in [(1,'Strongly\nDisagree'),(2,'Disagree'),(3,'Neutral'),(4,'Agree'),(5,'Strongly\nAgree')] %}
+            <div class="likert-option">
+              <input type="radio" name="q3" id="q3_{{val}}" value="{{val}}" required>
+              <label for="q3_{{val}}"><span class="num">{{val}}</span>{{lbl}}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
 
-      <input type="submit" value="💾 Save Personality">
-    </form>
+        <div class="question-card" style="animation-delay:0.2s">
+          <span class="question-num">Question 4 of 10</span>
+          <div class="question-text">I always keep my belongings organized and hate losing track of things while travelling.</div>
+          <div class="likert-group">
+            {% for val, lbl in [(1,'Strongly\nDisagree'),(2,'Disagree'),(3,'Neutral'),(4,'Agree'),(5,'Strongly\nAgree')] %}
+            <div class="likert-option">
+              <input type="radio" name="q4" id="q4_{{val}}" value="{{val}}" required>
+              <label for="q4_{{val}}"><span class="num">{{val}}</span>{{lbl}}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
 
-    <p style="text-align:center; margin-top:10px;">
-      Your personality helps us give better travel recommendations!
-    </p>
+        <!-- ── EXTRAVERSION ── -->
+        <div class="trait-section-header">
+          <div class="icon">😄</div>
+          <div class="info">
+            <div class="trait-title">Extraversion</div>
+            <div class="trait-hint">Sociability, energy, love of crowds and activity</div>
+          </div>
+        </div>
 
-  </div>
+        <div class="question-card" style="animation-delay:0.25s">
+          <span class="question-num">Question 5 of 10</span>
+          <div class="question-text">I love meeting new people on trips and socialising with locals or other travellers.</div>
+          <div class="likert-group">
+            {% for val, lbl in [(1,'Strongly\nDisagree'),(2,'Disagree'),(3,'Neutral'),(4,'Agree'),(5,'Strongly\nAgree')] %}
+            <div class="likert-option">
+              <input type="radio" name="q5" id="q5_{{val}}" value="{{val}}" required>
+              <label for="q5_{{val}}"><span class="num">{{val}}</span>{{lbl}}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="question-card" style="animation-delay:0.3s">
+          <span class="question-num">Question 6 of 10</span>
+          <div class="question-text">I prefer lively destinations with nightlife and crowds over quiet, remote places.</div>
+          <div class="likert-group">
+            {% for val, lbl in [(1,'Strongly\nDisagree'),(2,'Disagree'),(3,'Neutral'),(4,'Agree'),(5,'Strongly\nAgree')] %}
+            <div class="likert-option">
+              <input type="radio" name="q6" id="q6_{{val}}" value="{{val}}" required>
+              <label for="q6_{{val}}"><span class="num">{{val}}</span>{{lbl}}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- ── AGREEABLENESS ── -->
+        <div class="trait-section-header">
+          <div class="icon">🤝</div>
+          <div class="info">
+            <div class="trait-title">Agreeableness</div>
+            <div class="trait-hint">Compassion, cooperation, trust in others</div>
+          </div>
+        </div>
+
+        <div class="question-card" style="animation-delay:0.35s">
+          <span class="question-num">Question 7 of 10</span>
+          <div class="question-text">I enjoy travelling in groups and am happy to adjust my plans to accommodate others.</div>
+          <div class="likert-group">
+            {% for val, lbl in [(1,'Strongly\nDisagree'),(2,'Disagree'),(3,'Neutral'),(4,'Agree'),(5,'Strongly\nAgree')] %}
+            <div class="likert-option">
+              <input type="radio" name="q7" id="q7_{{val}}" value="{{val}}" required>
+              <label for="q7_{{val}}"><span class="num">{{val}}</span>{{lbl}}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="question-card" style="animation-delay:0.4s">
+          <span class="question-num">Question 8 of 10</span>
+          <div class="question-text">I trust locals easily and enjoy engaging with communities when I visit a new place.</div>
+          <div class="likert-group">
+            {% for val, lbl in [(1,'Strongly\nDisagree'),(2,'Disagree'),(3,'Neutral'),(4,'Agree'),(5,'Strongly\nAgree')] %}
+            <div class="likert-option">
+              <input type="radio" name="q8" id="q8_{{val}}" value="{{val}}" required>
+              <label for="q8_{{val}}"><span class="num">{{val}}</span>{{lbl}}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- ── NEUROTICISM ── -->
+        <div class="trait-section-header">
+          <div class="icon">😌</div>
+          <div class="info">
+            <div class="trait-title">Emotional Stability</div>
+            <div class="trait-hint">How you handle stress, uncertainty, and travel challenges</div>
+          </div>
+        </div>
+
+        <div class="question-card" style="animation-delay:0.45s">
+          <span class="question-num">Question 9 of 10</span>
+          <div class="question-text">I get anxious or stressed when travel plans change unexpectedly (missed flights, detours).</div>
+          <div class="likert-group">
+            {% for val, lbl in [(1,'Strongly\nDisagree'),(2,'Disagree'),(3,'Neutral'),(4,'Agree'),(5,'Strongly\nAgree')] %}
+            <div class="likert-option">
+              <input type="radio" name="q9" id="q9_{{val}}" value="{{val}}" required>
+              <label for="q9_{{val}}"><span class="num">{{val}}</span>{{lbl}}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="question-card" style="animation-delay:0.5s">
+          <span class="question-num">Question 10 of 10</span>
+          <div class="question-text">I tend to worry about safety, hygiene, or comfort levels before and during travel.</div>
+          <div class="likert-group">
+            {% for val, lbl in [(1,'Strongly\nDisagree'),(2,'Disagree'),(3,'Neutral'),(4,'Agree'),(5,'Strongly\nAgree')] %}
+            <div class="likert-option">
+              <input type="radio" name="q10" id="q10_{{val}}" value="{{val}}" required>
+              <label for="q10_{{val}}"><span class="num">{{val}}</span>{{lbl}}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div style="margin-top: 32px;">
+          <input type="submit" value="Analyse My Personality →" id="submitBtn">
+        </div>
+
+      </form>
+
+      <p class="helper-text" style="margin-top: 18px; font-size: 0.8rem;">
+        🔬 Based on the scientifically validated OCEAN / Big Five personality model
+      </p>
+
+    </div>
+  </main>
+
+</div>
+
+<script>
+  // Live progress tracker
+  const totalQ = 10;
+  const names = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'];
+
+  function updateProgress() {
+    let answered = 0;
+    names.forEach(name => {
+      if (document.querySelector(`input[name="${name}"]:checked`)) answered++;
+    });
+    const pct = (answered / totalQ) * 100;
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-text').textContent = `${answered} / ${totalQ} answered`;
+  }
+
+  document.getElementById('quizForm').addEventListener('change', updateProgress);
+
+  // Highlight selected card
+  document.querySelectorAll('.likert-option input[type="radio"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const card = this.closest('.question-card');
+      card.style.borderColor = 'rgba(201,168,76,0.4)';
+      card.style.background = 'rgba(201,168,76,0.03)';
+    });
+  });
+</script>
 
 </body>
 </html>

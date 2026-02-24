@@ -2,17 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>🌍 Travel Buddy – Get Destination Suggestions</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PersonaTrip — Plan Your Next Adventure</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
+<div class="page-wrapper">
 
-  <!-- 🔵 Navigation Bar -->
-  <div class="navbar">
+  <nav class="navbar">
+    <a class="navbar-brand" href="/">Persona<span>Trip</span></a>
     <a href="/">Home</a>
     <a href="/quiz">Personality Quiz</a>
-
     {% if username %}
       <span class="nav-user">👤 {{ username }}</span>
       <a href="/history">History</a>
@@ -21,54 +22,102 @@
       <a href="/login">Login</a>
       <a href="/register">Register</a>
     {% endif %}
-  </div>
+  </nav>
 
-  <div class="container">
-    <h1>✈️ Plan Your Next Adventure</h1>
+  <main class="main-content">
+    <div class="container" style="max-width: 720px;">
 
-    <form action="/recommend" method="POST">
-
-      <!-- Climate -->
-      <label>🌡️ Preferred Climate:</label><br>
-      <input type="radio" name="climate" value="Warm" required> Warm
-      <input type="radio" name="climate" value="Cold"> Cold
-      <input type="radio" name="climate" value="Moderate"> Moderate
-      <br><br>
-
-      <!-- Budget -->
-      <label>💰 Budget:</label><br>
-      <input type="radio" name="budget" value="Low" required> Low
-      <input type="radio" name="budget" value="Medium"> Medium
-      <input type="radio" name="budget" value="High"> High
-      <br><br>
-
-      <!-- Travel Type -->
-      <label>🧍‍♂️ Travel Type:</label><br>
-      <input type="checkbox" name="travel_type" value="Solo"> Solo
-      <input type="checkbox" name="travel_type" value="Couple"> Couple
-      <input type="checkbox" name="travel_type" value="Family"> Family
-      <input type="checkbox" name="travel_type" value="Group"> Group
-      <br><br>
-
-      <!-- Activities -->
-      <label>🎯 Interests / Activities:</label>
-      <div class="checkbox-grid">
-        {% for activity in ['Beaches','Culture','Food','History','Nature','Nightlife','Photography','Relaxation','Safari','Shopping','Sightseeing','Spiritual','Trekking','Adventure'] %}
-          <label><input type="checkbox" name="activities" value="{{ activity }}"> {{ activity }}</label>
-        {% endfor %}
+      <div class="auth-logo">
+        <div class="auth-logo-mark">✈️</div>
+        <h2 style="margin-top: 0;">Plan Your Next Adventure</h2>
+        <p class="subtitle" style="margin-bottom: 0;">Tell us your preferences and we'll find your perfect match</p>
       </div>
-      <br>
 
-      <input type="submit" value="🔍 Find Destinations">
+      <div class="auth-divider"></div>
 
-      {% if not username %}
-        <p style="margin-top:10px; color: #444;">
-          🔐 <a href="/login">Login</a> to save your personality and history.
-        </p>
-      {% endif %}
+      <form action="/recommend" method="POST">
 
-    </form>
-  </div>
+        <!-- Climate -->
+        <div class="pref-section">
+          <div class="pref-section-title">🌡️ &nbsp;Preferred Climate</div>
+          <div class="radio-group">
+            {% for climate in ['Warm', 'Cold', 'Moderate'] %}
+              <div class="radio-pill">
+                <input type="radio" name="climate" id="climate_{{ climate }}" value="{{ climate }}" {% if loop.first %}required{% endif %}>
+                <label for="climate_{{ climate }}">
+                  {% if climate == 'Warm' %}☀️{% elif climate == 'Cold' %}❄️{% else %}🌤️{% endif %}
+                  {{ climate }}
+                </label>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
 
+        <!-- Budget -->
+        <div class="pref-section">
+          <div class="pref-section-title">💰 &nbsp;Budget Range</div>
+          <div class="radio-group">
+            {% for budget in ['Low', 'Medium', 'High'] %}
+              <div class="radio-pill">
+                <input type="radio" name="budget" id="budget_{{ budget }}" value="{{ budget }}" {% if loop.first %}required{% endif %}>
+                <label for="budget_{{ budget }}">
+                  {% if budget == 'Low' %}🪙{% elif budget == 'Medium' %}💵{% else %}💎{% endif %}
+                  {{ budget }}
+                </label>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Travel Type -->
+        <div class="pref-section">
+          <div class="pref-section-title">🧍 &nbsp;Travel Type</div>
+          <div class="radio-group">
+            {% for ttype, icon in [('Solo','🧳'), ('Couple','💑'), ('Family','👨‍👩‍👧'), ('Group','👥')] %}
+              <div class="checkbox-pill">
+                <input type="checkbox" name="travel_type" id="ttype_{{ ttype }}" value="{{ ttype }}">
+                <label for="ttype_{{ ttype }}">{{ icon }} {{ ttype }}</label>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Activities -->
+        <div class="pref-section">
+          <div class="pref-section-title">🎯 &nbsp;Interests &amp; Activities</div>
+          <div class="checkbox-grid">
+            {% for activity, icon in [
+              ('Beaches','🏖️'), ('Culture','🎭'),
+              ('Food','🍜'), ('History','🏛️'),
+              ('Nature','🌿'), ('Nightlife','🌃'),
+              ('Photography','📸'), ('Relaxation','🛁'),
+              ('Safari','🦁'), ('Shopping','🛍️'),
+              ('Sightseeing','🗼'), ('Spiritual','🕌'),
+              ('Trekking','🥾'), ('Adventure','🪂')
+            ] %}
+              <div class="checkbox-pill">
+                <input type="checkbox" name="activities" id="act_{{ activity }}" value="{{ activity }}">
+                <label for="act_{{ activity }}">{{ icon }} {{ activity }}</label>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% if not username %}
+          <div style="background: rgba(61,142,240,0.08); border: 1px solid rgba(61,142,240,0.2); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px;">
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+              🔐 <a href="/login">Login</a> to save your personality profile and recommendation history.
+            </p>
+          </div>
+        {% endif %}
+
+        <input type="submit" value="Find My Destinations →">
+
+      </form>
+
+    </div>
+  </main>
+
+</div>
 </body>
 </html>

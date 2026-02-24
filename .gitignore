@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+database/persona_trip.db
+.env
+*.jpg
+*.png

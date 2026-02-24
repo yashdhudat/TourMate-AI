@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PersonaTrip — Your AI Itinerary</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .itin-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .itin-summary {
+      background: rgba(201,168,76,0.07);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      text-align: center;
+      margin-bottom: 28px;
+      font-style: italic;
+    }
+    .day-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeSlideUp 0.5s ease both;
+    }
+    .day-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--gold), var(--blue-accent));
+    }
+    .day-number {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--gold);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .day-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 18px;
+    }
+    .time-block {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+    .time-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .time-text {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .tip-box {
+      background: rgba(56,217,192,0.06);
+      border: 1px solid rgba(56,217,192,0.18);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      margin-top: 14px;
+      font-size: 0.82rem;
+      color: var(--teal);
+    }
+    .error-state {
+      text-align: center;
+      padding: 48px 0;
+      color: var(--text-muted);
+    }
+    .error-state .icon { font-size: 3rem; margin-bottom: 16px; }
+    .days-selector {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+    .days-selector a {
+      padding: 7px 18px;
+      border: 1px solid var(--border-bright);
+      border-radius: 99px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    .days-selector a.active,
+    .days-selector a:hover {
+      background: var(--gold-dim);
+      border-color: var(--gold);
+      color: var(--gold-light);
+    }
+  </style>
+</head>
+
+<body>
+<div class="page-wrapper">
+
+  <nav class="navbar">
+    <a class="navbar-brand" href="/">Persona<span>Trip</span></a>
+    <a href="/">Home</a>
+    <a href="/quiz">Personality Quiz</a>
+    {% if username %}
+      <span class="nav-user">👤 {{ username }}</span>
+      <a href="/history">History</a>
+      <a href="/logout">Logout</a>
+    {% endif %}
+  </nav>
+
+  <main class="main-content">
+    <div class="container" style="max-width: 720px;">
+
+      {% if itinerary %}
+
+        <div class="itin-header">
+          <div class="auth-logo-mark" style="margin: 0 auto 12px;">🗓️</div>
+          <h2 style="margin-top: 0;">Your AI Itinerary</h2>
+          <p class="subtitle" style="margin-bottom: 0;">
+            📍 {{ destination }}{% if state %}, {{ state }}{% endif %}
+            &nbsp;·&nbsp; {{ itinerary.duration }}
+          </p>
+        </div>
+
+        {% if itinerary.summary %}
+          <div class="itin-summary">✨ {{ itinerary.summary }}</div>
+        {% endif %}
+
+        <!-- Days selector -->
+        <div class="days-selector">
+          {% for d in [2, 3, 5] %}
+            <a href="/itinerary/{{ destination }}?state={{ state }}&days={{ d }}"
+               class="{% if itinerary.days|length == d %}active{% endif %}">
+              {{ d }} Days
+            </a>
+          {% endfor %}
+        </div>
+
+        <!-- Day Cards -->
+        {% for day in itinerary.days %}
+          <div class="day-card" style="animation-delay: {{ loop.index0 * 0.1 }}s">
+            <div class="day-number">Day {{ day.day }}</div>
+            <div class="day-title">{{ day.title }}</div>
+
+            <div class="time-block">
+              <span class="time-label">🌅 Morning</span>
+              <span class="time-text">{{ day.morning }}</span>
+            </div>
+            <div class="time-block">
+              <span class="time-label">☀️ Afternoon</span>
+              <span class="time-text">{{ day.afternoon }}</span>
+            </div>
+            <div class="time-block">
+              <span class="time-label">🌙 Evening</span>
+              <span class="time-text">{{ day.evening }}</span>
+            </div>
+
+            {% if day.tip %}
+              <div class="tip-box">💡 Insider tip: {{ day.tip }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+      {% else %}
+        <div class="error-state">
+          <div class="icon">⚠️</div>
+          <p style="color: var(--text-secondary); margin-bottom: 8px;">
+            Couldn't generate itinerary right now.
+          </p>
+          <p style="font-size: 0.85rem;">Check your Groq API key or try again.</p>
+        </div>
+      {% endif %}
+
+      <!-- Actions -->
+      <div style="display: flex; gap: 12px; margin-top: 28px;">
+        <a href="/recommend" style="flex:1; text-decoration:none;">
+          <button style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border-bright); color:var(--text-primary); font-family:'DM Sans',sans-serif; font-size:0.875rem; font-weight:600; padding:13px 20px; border-radius:var(--radius-md); cursor:pointer;">
+            ← Back to Results
+          </button>
+        </a>
+        <a href="/" style="flex:1; text-decoration:none;">
+          <button style="width:100%; background:linear-gradient(135deg,#c9a84c,#e4c97e); border:none; color:#080e1a; font-family:'DM Sans',sans-serif; font-size:0.875rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; padding:13px 20px; border-radius:var(--radius-md); cursor:pointer;">
+            Plan Another Trip
+          </button>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

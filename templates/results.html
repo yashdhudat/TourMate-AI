@@ -2,17 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>🌟 Your Travel Recommendations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PersonaTrip — Your Travel Recommendations</title>
   <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .chatbot-wrap { margin-top:18px; border-top:1px solid var(--border); padding-top:16px; }
+    .chatbot-label { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); margin-bottom:10px; }
+    .chat-messages { max-height:200px; overflow-y:auto; margin-bottom:10px; display:flex; flex-direction:column; gap:8px; }
+    .chat-bubble { padding:10px 14px; border-radius:var(--radius-md); font-size:0.85rem; line-height:1.5; max-width:92%; }
+    .chat-bubble.user { background:var(--gold-dim); border:1px solid rgba(201,168,76,0.25); color:var(--gold-light); align-self:flex-end; }
+    .chat-bubble.ai { background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--text-secondary); align-self:flex-start; }
+    .chat-input-row { display:flex; gap:8px; }
+    .chat-input { flex:1; background:rgba(255,255,255,0.04); border:1px solid var(--border-bright); border-radius:var(--radius-sm); color:var(--text-primary); font-family:'DM Sans',sans-serif; font-size:0.85rem; padding:9px 13px; outline:none; transition:var(--transition); }
+    .chat-input:focus { border-color:var(--gold); }
+    .chat-send-btn { background:var(--gold-dim); border:1px solid rgba(201,168,76,0.3); color:var(--gold); border-radius:var(--radius-sm); padding:9px 16px; cursor:pointer; font-size:0.85rem; font-weight:700; transition:var(--transition); }
+    .chat-send-btn:hover { background:rgba(201,168,76,0.25); }
+    .quick-questions { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+    .quick-q { font-size:0.72rem; color:var(--text-muted); border:1px solid var(--border); border-radius:99px; padding:3px 10px; cursor:pointer; background:none; font-family:'DM Sans',sans-serif; transition:var(--transition); }
+    .quick-q:hover { border-color:rgba(201,168,76,0.3); color:var(--text-secondary); }
+    .itin-btn { display:inline-flex; align-items:center; gap:6px; background:rgba(61,142,240,0.1); border:1px solid rgba(61,142,240,0.25); color:var(--blue-accent); border-radius:var(--radius-sm); padding:7px 14px; font-size:0.8rem; font-weight:600; text-decoration:none; transition:var(--transition); margin-top:14px; font-family:'DM Sans',sans-serif; }
+    .itin-btn:hover { background:rgba(61,142,240,0.2); text-decoration:none; transform:translateY(-1px); }
+  </style>
 </head>
-
 <body>
-
-  <!-- 🔵 Navigation Bar -->
-  <div class="navbar">
+<div class="page-wrapper">
+  <nav class="navbar">
+    <a class="navbar-brand" href="/">Persona<span>Trip</span></a>
     <a href="/">Home</a>
     <a href="/quiz">Personality Quiz</a>
-
     {% if username %}
       <span class="nav-user">👤 {{ username }}</span>
       <a href="/history">History</a>
@@ -21,83 +38,94 @@
       <a href="/login">Login</a>
       <a href="/register">Register</a>
     {% endif %}
-  </div>
-
-  <div class="container">
-
-    {% if not show_more %}
-      <h2>🗺️ Top 3 Destinations for You</h2>
-    {% else %}
-      <h2>📌 More Recommendations for You</h2>
-    {% endif %}
-
-    {% for place in recommendations %}
-      <div class="result-card">
-
-        <!-- Destination Image -->
-        <img src="/static/destinations/{{ place.image_name }}"
-          onerror="this.onerror=null; this.src='/static/destinations/default.jpg';"
-          class="destination-image">
-
-
-        <h3>📍 {{ place.destination }} <small>({{ place.state }})</small></h3>
-
-        <!-- Badges -->
-        <div style="margin:8px 0;">
-          {% if place.final_score > 0.7 %}
-            <span class="badge">🌟 Top Match</span>
-          {% endif %}
+  </nav>
+  <main class="main-content">
+    <div class="container" style="max-width:720px;">
+      <div class="auth-logo">
+        <div class="auth-logo-mark">🗺️</div>
+        <h2 style="margin-top:0;">{% if not show_more %}Your Top Destinations{% else %}More For You{% endif %}</h2>
+        <p class="subtitle" style="margin-bottom:0;">AI-matched to your personality &amp; preferences</p>
+      </div>
+      <div class="auth-divider"></div>
+      <div class="results-grid">
+        {% for place in recommendations %}
+          <div class="result-card {% if loop.first and not show_more %}top-match{% endif %}" style="animation-delay:{{ loop.index0 * 0.12 }}s">
+            {% if loop.first and not show_more %}
+              <div style="margin-bottom:14px;">
+                <span class="badge">⭐ Top Match</span>
+                <span class="badge blue" style="margin-left:4px;">🤖 AI Picked</span>
+              </div>
+            {% endif %}
+            <img src="/static/destinations/{{ place.image_name }}"
+                 onerror="this.onerror=null;this.src='/static/destinations/default.jpg';"
+                 class="destination-image" alt="{{ place.destination }}">
+            <h3>📍 {{ place.destination }} <small style="font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:400;color:var(--text-secondary);">({{ place.state }})</small></h3>
+            <div class="score-bar-wrap">
+              <div class="score-bar-label"><span>Personality Match</span><span>{{ (place.final_score * 100)|int }}%</span></div>
+              <div class="score-bar-track"><div class="score-bar-fill" style="width:{{ (place.final_score * 100)|int }}%;"></div></div>
+            </div>
+            <p class="why-text">💬 {{ place.explanation }}</p>
+            {% if username %}
+              <a href="/itinerary/{{ place.destination }}?state={{ place.state }}" class="itin-btn">🗓️ Generate AI Itinerary</a>
+              <div class="chatbot-wrap">
+                <div class="chatbot-label">🤖 Ask AI about {{ place.destination }}</div>
+                <div class="quick-questions">
+                  <button class="quick-q" onclick="sendChat({{ loop.index }},'{{ place.destination }}','{{ place.state }}','Best time to visit?')">Best time to visit?</button>
+                  <button class="quick-q" onclick="sendChat({{ loop.index }},'{{ place.destination }}','{{ place.state }}','Is it safe for solo travel?')">Safe for solo?</button>
+                  <button class="quick-q" onclick="sendChat({{ loop.index }},'{{ place.destination }}','{{ place.state }}','Top 3 must-see attractions?')">Top attractions?</button>
+                </div>
+                <div class="chat-messages" id="chat-msgs-{{ loop.index }}"></div>
+                <div class="chat-input-row">
+                  <input class="chat-input" type="text" id="chat-input-{{ loop.index }}" placeholder="Ask anything about {{ place.destination }}..." onkeydown="if(event.key==='Enter')sendChat({{ loop.index }},'{{ place.destination }}','{{ place.state }}')">
+                  <button class="chat-send-btn" onclick="sendChat({{ loop.index }},'{{ place.destination }}','{{ place.state }}')">Send →</button>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      <div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;">
+        {% if not show_more %}
+          <a href="/" style="flex:1;text-decoration:none;"><button style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-bright);color:var(--text-primary);font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;padding:13px 20px;border-radius:var(--radius-md);cursor:pointer;">🔁 Try Again</button></a>
+          <a href="/recommend?more=true" style="flex:1;text-decoration:none;"><button style="width:100%;background:linear-gradient(135deg,#c9a84c,#e4c97e);border:none;color:#080e1a;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:13px 20px;border-radius:var(--radius-md);cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,0.3);">➕ See More</button></a>
+        {% else %}
+          <a href="/" style="flex:1;text-decoration:none;"><button style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border-bright);color:var(--text-primary);font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;padding:13px 20px;border-radius:var(--radius-md);cursor:pointer;">⬅ Back to Home</button></a>
+        {% endif %}
+      </div>
+      {% if not username %}
+        <div style="background:rgba(61,142,240,0.07);border:1px solid rgba(61,142,240,0.18);border-radius:10px;padding:14px 18px;margin-top:24px;text-align:center;">
+          <p style="color:var(--text-secondary);font-size:0.85rem;margin:0;">🔐 <a href="/login">Login</a> to use the AI chatbot, generate itineraries &amp; save history</p>
         </div>
-
-        <!-- Final Score -->
-        <p>⭐ <b>Final Match Score:</b> {{ place.final_score }}</p>
-
-        <!-- Explanation -->
-        <p><b>💬 Why this destination?</b><br>{{ place.explanation }}</p>
-
-      </div>
-    {% endfor %}
-
-    <br>
-
-    <!-- 🔁 Back to Start -->
-    {% if not show_more %}
-      <a href="/" style="text-decoration:none;">
-        <button style="margin-top:10px;">🔁 Try Again</button>
-      </a>
-    {% else %}
-      <a href="/" style="text-decoration:none;">
-        <button style="margin-top:10px;">⬅ Back to Home</button>
-      </a>
-    {% endif %}
-
-    <br><br>
-
-    <!-- ➕ SEE MORE BUTTON -->
-    {% if not show_more %}
-      <div style="text-align:center; margin-top:20px;">
-        <a href="/recommend?more=true" style="text-decoration:none;">
-          <button style="
-            background:#2a6ebc;
-            color:white;
-            padding:10px 20px;
-            border:none;
-            border-radius:8px;
-            font-size:16px;
-            cursor:pointer;">
-            ➕ See More Recommendations
-          </button>
-        </a>
-      </div>
-    {% endif %}
-
-    {% if not username %}
-      <p style="margin-top:20px; text-align:center;">
-        🔐 <a href="/login">Login</a> to save your history.
-      </p>
-    {% endif %}
-
-  </div>
-
+      {% endif %}
+    </div>
+  </main>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded',()=>{
+    document.querySelectorAll('.score-bar-fill').forEach((fill,i)=>{
+      const t=fill.style.width; fill.style.width='0%';
+      setTimeout(()=>{fill.style.width=t;},300+i*150);
+    });
+  });
+  async function sendChat(index,destination,state,prefill){
+    const input=document.getElementById('chat-input-'+index);
+    const msgs=document.getElementById('chat-msgs-'+index);
+    const question=prefill||input.value.trim();
+    if(!question)return;
+    msgs.innerHTML+=`<div class="chat-bubble user">${question}</div>`;
+    const lid='load-'+index+'-'+Date.now();
+    msgs.innerHTML+=`<div class="chat-bubble ai" id="${lid}" style="color:var(--text-muted);font-style:italic;">Thinking...</div>`;
+    msgs.scrollTop=msgs.scrollHeight;
+    if(!prefill)input.value='';
+    try{
+      const res=await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({destination,state,question})});
+      const data=await res.json();
+      document.getElementById(lid).outerHTML=`<div class="chat-bubble ai">${data.answer}</div>`;
+    }catch{
+      document.getElementById(lid).outerHTML=`<div class="chat-bubble ai">Sorry, couldn't connect. Try again.</div>`;
+    }
+    msgs.scrollTop=msgs.scrollHeight;
+  }
+</script>
 </body>
 </html>

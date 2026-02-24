@@ -2,154 +2,144 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>📜 Your History</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PersonaTrip — Your History</title>
   <link rel="stylesheet" href="/static/style.css">
-
-  <style>
-    /* Accordion Heading */
-    .accordion-header {
-      background: #2a6ebc;
-      color: white;
-      padding: 12px 18px;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-bottom: 10px;
-      font-size: 18px;
-      font-weight: 600;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      transition: background .2s ease;
-    }
-    .accordion-header:hover {
-      background: #1f5aa0;
-    }
-
-    /* Hidden content container */
-    .accordion-content {
-      display: none;
-      margin-bottom: 18px;
-    }
-
-    /* Grid layout inside each accordion */
-    .history-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 20px;
-      margin-top: 15px;
-    }
-
-    /* History card */
-    .history-card {
-      background: white;
-      padding: 18px 22px;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-      border-left: 6px solid #2a6ebc;
-      transition: transform .15s ease, box-shadow .15s ease;
-    }
-    .history-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    }
-
-    .history-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #1c3d68;
-      margin-bottom: 6px;
-    }
-
-    .history-score {
-      font-size: 15px;
-      margin-bottom: 6px;
-      color: #444;
-    }
-
-    .history-date {
-      font-size: 13px;
-      color: #666;
-    }
-  </style>
-
-  <script>
-    function toggleAccordion(id) {
-      const section = document.getElementById(id);
-      section.style.display = section.style.display === "block" ? "none" : "block";
-    }
-  </script>
-
 </head>
-<body>
 
-  <!-- 🔵 Navbar -->
-  <div class="navbar">
+<body>
+<div class="page-wrapper">
+
+  <nav class="navbar">
+    <a class="navbar-brand" href="/">Persona<span>Trip</span></a>
     <a href="/">Home</a>
     <a href="/quiz">Personality Quiz</a>
-
     {% if username %}
       <span class="nav-user">👤 {{ username }}</span>
-      <a href="/history">History</a>
+      <a href="/history" style="color: var(--gold);">History</a>
       <a href="/logout">Logout</a>
     {% endif %}
-  </div>
+  </nav>
 
-  <div class="container">
-    <h2 style="text-align:center; margin-top:15px;">
-      📜 Your Travel Recommendation History
-    </h2>
+  <main class="main-content">
+    <div class="container" style="max-width: 780px;">
 
-    {% set grouped = {} %}
-
-    {% for item in history %}
-      {% set date = item.created_at.split("T")[0] %}
-      {% if date not in grouped %}
-        {% set _ = grouped.update({date: []}) %}
-      {% endif %}
-      {% set _ = grouped[date].append(item) %}
-    {% endfor %}
-
-    <!-- Render each date in an accordion -->
-    {% for date, items in grouped.items() %}
-
-      <div class="accordion-header" onclick="toggleAccordion('{{ date }}')">
-        <span>📅 {{ date }}</span>
-        <span>▼</span>
+      <div class="auth-logo">
+        <div class="auth-logo-mark">📜</div>
+        <h2 style="margin-top: 0;">Travel History</h2>
+        <p class="subtitle" style="margin-bottom: 0;">Your past AI-powered recommendations</p>
       </div>
 
-      <div class="accordion-content" id="{{ date }}">
-        <div class="history-grid">
+      <div class="auth-divider"></div>
 
-          {% for item in items %}
-            <div class="history-card">
+      {% set grouped = {} %}
+      {% for item in history %}
+        {% set date = item.created_at.split("T")[0] %}
+        {% if date not in grouped %}
+          {% set _ = grouped.update({date: []}) %}
+        {% endif %}
+        {% set _ = grouped[date].append(item) %}
+      {% endfor %}
 
-              <!-- Delete button -->
-              <form action="/history/delete/{{ item.id }}" method="POST" class="delete-form"
-                    onsubmit="return confirm('Are you sure you want to delete this entry?');">
-                <button class="delete-btn">❌</button>
-              </form>
+      {% if not history %}
+        <div style="text-align: center; padding: 48px 0; color: var(--text-muted);">
+          <div style="font-size: 3rem; margin-bottom: 16px;">🗺️</div>
+          <p style="font-size: 1rem; margin-bottom: 8px; color: var(--text-secondary);">No history yet</p>
+          <p style="font-size: 0.85rem;">
+            <a href="/">Find your first destination →</a>
+          </p>
+        </div>
+      {% endif %}
 
+      {% for date, items in grouped.items() %}
+        <div class="history-group">
 
-              <div class="history-title">
-                📍 {{ item.destination }} <small>({{ item.country }})</small>
-              </div>
+          <!-- Accordion header -->
+          <div class="history-date-header" onclick="toggleAccordion('acc_{{ loop.index }}')">
+            <span>📅 &nbsp;{{ date }}</span>
+            <span id="arrow_{{ loop.index }}" style="transition: transform 0.25s; display:inline-block;">▼</span>
+          </div>
 
-              <div class="history-score">
-                ⭐ Score: {{ item.score }}
-              </div>
+          <!-- Accordion content -->
+          <div class="accordion-content" id="acc_{{ loop.index }}">
+            <div class="history-cards-grid">
+              {% for item in items %}
+                <div class="history-card">
 
-              <div class="history-date">
-                ⏰ {{ item.created_at | pretty_ist }}
-              </div>
+                  <form action="/history/delete/{{ item.id }}" method="POST" class="delete-form"
+                        onsubmit="return confirm('Delete this entry?');">
+                    <button class="delete-btn" title="Delete">✕</button>
+                  </form>
 
+                  <h4>📍 {{ item.destination }}</h4>
+                  <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:8px;">{{ item.country }}</p>
+
+                  <!-- Mini score bar -->
+                  <div style="margin: 8px 0 10px;">
+                    <div style="height:3px; background:var(--border); border-radius:99px; overflow:hidden;">
+                      <div style="height:100%; width:{{ (item.score * 100)|int }}%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius:99px;"></div>
+                    </div>
+                  </div>
+
+                  <p class="score">⭐ Score: {{ item.score }}</p>
+                  <p class="timestamp">⏰ {{ item.created_at | pretty_ist }}</p>
+
+                </div>
+              {% endfor %}
             </div>
-          {% endfor %}
+          </div>
 
         </div>
+      {% endfor %}
+
+      <div style="margin-top: 24px;">
+        <a href="/" style="text-decoration:none;">
+          <button style="
+            width: 100%;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-bright);
+            color: var(--text-secondary);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.25s ease;
+          "
+          onmouseover="this.style.background='rgba(255,255,255,0.08)';this.style.color='var(--text-primary)'"
+          onmouseout="this.style.background='rgba(255,255,255,0.04)';this.style.color='var(--text-secondary)'">
+            ✈️ Plan a New Trip
+          </button>
+        </a>
       </div>
 
-    {% endfor %}
-  </div>
+    </div>
+  </main>
+
+</div>
+
+<script>
+  function toggleAccordion(id) {
+    const el = document.getElementById(id);
+    const index = id.replace('acc_', '');
+    const arrow = document.getElementById('arrow_' + index);
+    const isOpen = el.style.display === 'block';
+    el.style.display = isOpen ? 'none' : 'block';
+    arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+
+  // Open first accordion by default
+  document.addEventListener('DOMContentLoaded', () => {
+    const first = document.getElementById('acc_1');
+    const arrow = document.getElementById('arrow_1');
+    if (first) {
+      first.style.display = 'block';
+      if (arrow) arrow.style.transform = 'rotate(180deg)';
+    }
+  });
+</script>
 
 </body>
 </html>

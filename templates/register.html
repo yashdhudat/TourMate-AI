@@ -2,52 +2,66 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>📝 Register</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PersonaTrip — Create Account</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
+<div class="page-wrapper">
 
-  <!-- Navbar -->
-  <div class="navbar">
+  <nav class="navbar">
+    <a class="navbar-brand" href="/">Persona<span>Trip</span></a>
     <a href="/">Home</a>
     <a href="/quiz">Personality Quiz</a>
     <a href="/login">Login</a>
-  </div>
+  </nav>
 
-  <div class="container">
-    <h2>📝 Create a New Account</h2>
+  <main class="main-content">
+    <div class="container" style="max-width: 460px;">
 
-    <!-- Flash messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <ul>
+      <div class="auth-logo">
+        <div class="auth-logo-mark">✍️</div>
+        <h2 style="margin-top: 0;">Create Account</h2>
+        <p class="subtitle" style="margin-bottom: 0;">Start your personalised travel journey</p>
+      </div>
+
+      <div class="auth-divider"></div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
           {% for cat, msg in messages %}
-            <li style="color: red; list-style:none;">{{ msg }}</li>
+            <li class="flash-message {% if cat == 'error' %}error{% endif %}" style="margin-bottom:20px;">{{ msg }}</li>
           {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
+        {% endif %}
+      {% endwith %}
 
-    <form method="POST">
+      <form method="POST">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" placeholder="e.g. wanderer_yash" required>
+        </div>
 
-      <label>Username:</label><br>
-      <input type="text" name="username" required><br><br>
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" required>
+        </div>
 
-      <label>Email:</label><br>
-      <input type="email" name="email" required><br><br>
+        <div class="form-group" style="margin-bottom: 28px;">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="••••••••" required>
+        </div>
 
-      <label>Password:</label><br>
-      <input type="password" name="password" required><br><br>
+        <input type="submit" value="Create My Account →">
+      </form>
 
-      <input type="submit" value="▶ Register">
-    </form>
+      <p class="helper-text">
+        Already have an account? <a href="/login">Sign in here</a>
+      </p>
 
-    <p style="margin-top: 10px;">
-      Already have an account? <a href="/login">Login here</a>.
-    </p>
+    </div>
+  </main>
 
-  </div>
-
+</div>
 </body>
 </html>
